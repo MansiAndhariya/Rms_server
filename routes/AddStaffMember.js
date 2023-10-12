@@ -10,7 +10,7 @@ var {
 var JWT = require("jsonwebtoken");
 var JWTD = require("jwt-decode");
 var Workorder = require("../modals/Workorder");
-
+var Rentals = require("../modals/Rentals");
 
 // Add staffmember
 router.post("/addstaffmember", async (req, res) => {
@@ -50,142 +50,60 @@ router.post("/addstaffmember", async (req, res) => {
     }
   });
 
-
-// delete staffmember
-// router.delete("/delete_staffmember/:id", async (req, res) => {
-//   try {
-//     const staffMemberId = req.params.id;
-
-//     // Check if the staff member is referenced in any workorder document
-//     const workOrderWithStaffMember = await Workorder.findOne({ staffmember_name: staffMemberId });
-
-//     console.log("staffMemberId:", staffMemberId);
-//     console.log("workOrderWithStaffMember:", workOrderWithStaffMember);
-
-//     if (workOrderWithStaffMember) {
-//       // If the staff member is referenced in a workorder, return an error
-//       return res.status(400).json({
-//         statusCode: 400,
-//         message: `Cannot delete staff member. Referenced in work order(s): ${workOrderWithStaffMember.map(order => order._id).join(', ')}`,
-//       });
-//     }
-
-//     // If the staff member is not referenced in work orders, proceed with deletion
-//     const result = await AddStaffMember.findByIdAndDelete(staffMemberId);
-
-//     if (!result) {
-//       return res.status(404).json({
-//         statusCode: 404,
-//         message: "Staff member not found.",
-//       });
-//     }
-
-//     res.json({
-//       statusCode: 200,
-//       data: result,
-//       message: "Staff member deleted successfully",
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       statusCode: 500,
-//       message: err.message,
-//     });
-//   }
-// });
-
-
-
-router.delete("/delete_staffmember", async (req, res) => {    
-  try {
-      let result = await AddStaffMember.deleteMany({
-        _id: { $in: req.body },
+  router.delete("/delete_staffmember", async (req, res) => {
+    try {
+      const staffIdsToDelete = req.body;
+  
+      // Get the names of the staff members to be deleted
+      const staffMembersToDelete = await AddStaffMember.find({
+        _id: { $in: staffIdsToDelete },
+      }).select("staffmember_name");
+  
+      const staffMemberNamesToDelete = staffMembersToDelete.map(
+        (staff) => staff.staffmember_name
+      );
+  
+      // Check if any work order is associated with the staff members to be deleted
+      const assignedWorkOrders = await Workorder.find({
+        staffmember_name: { $in: staffMemberNamesToDelete },
       });
+
+      const assignedProperty = await Rentals.find({
+        staffmember_name: { $in: staffMemberNamesToDelete },
+      });
+  
+      if (assignedWorkOrders.length > 0) {
+        return res.status(201).json({
+          statusCode: 201,
+          message:
+            "Staff members are already assigned to work orders. Deletion not allowed.",
+        });
+      }
+
+      if (assignedProperty.length > 0) {
+        return res.status(202).json({
+          statusCode: 202,
+          message:
+            "Staff members are already assigned to property. Deletion not allowed.",
+        });
+      }
+  
+      const result = await AddStaffMember.deleteMany({
+        _id: { $in: staffIdsToDelete },
+      });
+  
       res.json({
         statusCode: 200,
         data: result,
-        message: "staffmember Deleted Successfully",
+        message: "Staff members deleted successfully",
       });
     } catch (err) {
-      res.json({
+      res.status(500).json({
         statusCode: 500,
         message: err.message,
       });
     }
   });
-// router.delete("/delete_staffmember/:id", async (req, res) => {
-//   try {
-//     const staffMemberId = req.params.id;
-
-//     // Check if the staff member's name is used in the work orders collection
-//     const matchingWorkOrders = await Workorder.find({ staffmember_name: staffMemberId });
-
-//     if (matchingWorkOrders.length > 0) {
-//       // If matching work orders are found, prevent deletion
-//       return res.status(400).json({
-//         statusCode: 400,
-//         message: "Staff member is already used in work orders. Cannot delete.",
-//       });
-//     }
-//     // If no matching work orders found, proceed with deletion
-//     const result = await AddStaffMember.findOneAndDelete({ _id: staffMemberId });
-
-//     if (!result) {
-//       // If the record with the specified ID doesn't exist
-//       return res.status(404).json({
-//         statusCode: 404,
-//         message: "Staff member not found",
-//       });
-//     }
-
-//     res.json({
-//       statusCode: 200,
-//       data: result,
-//       message: "Staff member deleted successfully",
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       statusCode: 500,
-//       message: err.message,
-//     });
-//   }
-// });
-
-// router.delete("/delete_staffmember", async (req, res) => {
-//   try {
-//     const staffMemberIds = req.body;
-
-//     // Check if there are any work orders associated with the staff member IDs
-//     const workOrdersWithStaffMembers = await Workorder.find({
-//       _id: { $in: staffMemberIds },
-//     });
-
-//     // If work orders are found, do not delete the staff members
-//     if (workOrdersWithStaffMembers.length > 0) {
-//       return res.status(400).json({
-//         statusCode: 400,
-//         message: "Cannot delete staff members with associated work orders",
-//         data: workOrdersWithStaffMembers,
-//       });
-//     }
-
-//     // If no work orders are associated, proceed to delete the staff members
-//     const result = await AddStaffMember.deleteMany({
-//       _id: { $in: staffMemberIds },
-//     });
-
-//     res.json({
-//       statusCode: 200,
-//       data: result,
-//       message: "Staff members deleted successfully",
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       statusCode: 500,
-//       message: err.message,
-//     });
-//   }
-// });
-
 
     //edit staffmember 
 router.put("/staffmember/:id", async (req, res) => {
@@ -203,8 +121,6 @@ router.put("/staffmember/:id", async (req, res) => {
       });
     }
   });
-
-
 
   
 //find staffmember 

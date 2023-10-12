@@ -141,20 +141,21 @@ router.get("/rentals_summary/:id", async (req, res) => {
 });
 
 
-router.get("/rentals_property/:rental_adress", async (req, res) => {
+router.get("/Rentals_summary/tenant/:rental_address", async (req, res) => {
   try {
-    const adress = req.params.rental_adress; 
-    var data = await Rentals.findOne({ rental_adress: adress }); 
-    if (data) {
+    const address = req.params.rental_address;
+    const data = await Rentals.find({ rental_adress: address });
+
+    if (data && data.length > 0) {
       res.json({
         data: data,
         statusCode: 200,
-        message: "Rental property details retrieved successfully",
+        message: "Summary data retrieved successfully",
       });
     } else {
       res.status(404).json({
         statusCode: 404,
-        message: "Rental property details not found",
+        message: "Summary data not found for the provided address",
       });
     }
   } catch (error) {

@@ -289,6 +289,32 @@ router.get("/tenant_summary/:id", async (req, res) => {
   }
 });
 
+router.get("/tenant_summary/tenant/:tenant_email", async (req, res) => {
+  try {
+    const email = req.params.tenant_email;
+
+    // Use await to fetch data and handle the result as an array
+    const data = await Tenants.find({ tenant_email: email });
+    if (data) {
+      res.json({
+        data: data,
+        statusCode: 200,
+        message: " tenant summaryGet Successfully",
+      });
+    } else {
+      res.status(404).json({
+        statusCode: 404,
+        message: "tenant summary not found",
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      statusCode: 500,
+      message: error.message,
+    });
+  }
+});
+
 //fillter api lease type wise
 router.post("/filterlease_type", async (req, res) => {
   try {

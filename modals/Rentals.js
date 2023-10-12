@@ -9,6 +9,7 @@ const registerSchema = new Schema({
     rental_city: { type: String },
     rental_country: { type: String },
     rental_postcode: { type: Number },
+    
 
   
   //   Add Rental owner
@@ -27,7 +28,7 @@ const registerSchema = new Schema({
 //RESIDENTIAL
   rental_bed: { type: String },
   rental_bath: { type: String },
-  propertyres_image: { type: String },
+  propertyres_image: { type: Array },
 
   rental_soft: { type: String },
   rental_units: { type: String },
@@ -37,7 +38,7 @@ const registerSchema = new Schema({
   rentalcom_soft: { type: String },
   rentalcom_units: { type: String },
   rentalcom_unitsAdress: { type: String },
- property_image: { type: String },
+  property_image: { type: Array },
 });
 
 module.exports = mongoose.model("rentals", registerSchema);

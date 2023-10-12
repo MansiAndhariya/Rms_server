@@ -126,15 +126,43 @@ router.get("/propropartytype", async (req, res) => {
 // delete proparty type working 
   router.delete("/newproparty", async (req, res) => {
     try {
-      let result = await NewProparty.deleteMany({
-        _id: { $in: req.body },
+      const propIdsToDelete = req.body;
+
+      console.log("propIdsToDelete from body", propIdsToDelete);
+  
+      // Get the names of the staff members to be deleted
+      const propertyToDelete = await NewProparty.find({
+        _id: { $in: propIdsToDelete },
+      }).select("propertysub_type");
+      console.log("propertyToDelete after variable",propertyToDelete)
+  
+      const propNamesToDelete = propertyToDelete.map(
+        (staff) => staff.propertysub_type
+      );
+  
+      const assignedProperty = await Rentals.find({
+        property_type: { $in: propNamesToDelete },
+      }); 
+  
+      if (assignedProperty.length > 0) {
+        return res.status(201).json({
+          statusCode: 201,
+          message:
+            "Property Type are already assigned. Deletion not allowed.",
+        });
+      }
+
+      const result = await NewProparty.deleteMany({
+        _id: { $in: propIdsToDelete },
       });
+      
       res.json({
         statusCode: 200,
         data: result,
-        message: "proparty Deleted Successfully",
+        message: "property Deleted Successfully",
       });
     } catch (err) {
+      console.log(err, "fsjlkdfjsdsfdljsldk")
       res.json({
         statusCode: 500,
         message: err.message,
