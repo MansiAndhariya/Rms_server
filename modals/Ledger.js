@@ -13,7 +13,7 @@ const ledgerSchema = new Schema({
   rental_adress: { type: String },
   memo: { type: String },
   date_range: { type: String },
-  attachment: { type: String },
+  attachment: { type: Array },
   total_amount:{type: Number},
   entries: [entrySchema], 
 });

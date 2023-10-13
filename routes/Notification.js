@@ -94,6 +94,7 @@ var workorder = require("../modals/Workorder");
 router.get("/notification", async (req, res) => {
   try {
     var data = await Notification.find({istenant: true});
+    data.reverse();
     res.json({
       data: data,
       statusCode: 200,

@@ -25,6 +25,7 @@ router.post("/rentalowner", async (req, res) => {
    router.get("/rentalowner", async (req, res) => {
   try {
     var data = await RentalOwners.find();
+    data.reverse();
     res.json({
       data: data,
       statusCode: 200,

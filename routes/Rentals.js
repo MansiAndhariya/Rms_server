@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 var Rentals = require("../modals/Rentals");
+var Tenants = require("../modals/Tenants");
 // var {verifyToken} = require("../authentication");
 
 // Post
@@ -39,9 +40,36 @@ router.get("/rentals", async (req, res) => {
 
 router.delete("/rentals", async (req, res) => {
   try {
-    let result = await Rentals.deleteMany({
-      _id: { $in: req.body },
-    });
+    const propIdsToDelete = req.body;
+
+      console.log("propIdsToDelete from body", propIdsToDelete);
+  
+      // Get the names of the staff members to be deleted
+      const propertyToDelete = await Rentals.find({
+        _id: { $in: propIdsToDelete },
+      }).select("rental_adress");
+      console.log("propertyToDelete after variable",propertyToDelete)
+  
+      const propNamesToDelete = propertyToDelete.map(
+        (staff) => staff.rental_adress
+      );
+  
+      const assignedProperty = await Tenants.find({
+        rental_adress: { $in: propNamesToDelete },
+      }); 
+  
+      if (assignedProperty.length > 0) {
+        return res.status(201).json({
+          statusCode: 201,
+          message:
+            "Property is already assigned. Deletion not allowed.",
+        });
+      }
+
+      const result = await Rentals.deleteMany({
+        _id: { $in: propIdsToDelete },
+      });
+      
     res.json({
       statusCode: 200,
       data: result,
@@ -245,6 +273,7 @@ router.post("/filterproperty/owners", async (req, res) => {
 router.get("/property", async (req, res) => {
   try {
     var data = await Rentals.find({isrenton:false}).select("rental_adress")
+    data.reverse();
     res.json({
       statusCode: 200,
       data: data,

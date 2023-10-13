@@ -177,6 +177,7 @@ router.post("/tenant", async (req, res) => {
   router.get("/tenant", async (req, res) => {
   try {
     var data = await Tenants.find();
+    data.reverse();
     res.json({
       data: data,
       statusCode: 200,
@@ -311,6 +312,40 @@ router.get("/tenant_summary/tenant/:tenant_email", async (req, res) => {
     res.status(500).json({
       statusCode: 500,
       message: error.message,
+    });
+  }
+});
+
+ // Define a route to get a tenant's rental addresses by email
+ router.get("/tenant_rental_addresses/:tenant_email", async (req, res) => {
+  try {
+    const email = req.params.tenant_email;
+
+    // Use await to fetch data and handle the result as an array
+    const data = await Tenants.find({ tenant_email: email });
+   
+    if (data && data.length > 0) {
+      // Extract rental addresses from the data using "rental_adress"
+      const rental_adress = data.map(tenant => tenant.rental_adress);
+
+      res.json({
+        rental_adress: rental_adress, // Use "rental_adress" here
+        statusCode: 200,
+        message: "Rental addresses retrieved successfully for the tenant",
+      });
+    } else {
+      // If data is an empty array, it means no results were found for the email
+      res.status(404).json({
+        statusCode: 404,
+        message: "Tenant not found or has no rental addresses",
+      });
+    }
+  } catch (error) {
+    // Handle errors properly
+    console.error(error); // Log the error for debugging purposes
+    res.status(500).json({
+      statusCode: 500,
+      message: "Internal server error",
     });
   }
 });

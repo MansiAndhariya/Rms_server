@@ -79,6 +79,7 @@ router.post("/workorder", async (req, res) => {
   router.get("/workorder", async (req, res) => {
     try {
       var data = await Workorder.find();
+      data.reverse();
       res.json({
         data: data,
         statusCode: 200,
@@ -185,7 +186,7 @@ router.get("/workorder/:rental_adress", async (req, res) => {
 
 
     // get workorder data as per work_assigned
-    router.get("/workorder/by-staff-member/:staffmember_name", async (req, res) => {
+router.get("/workorder/by-staff-member/:staffmember_name", async (req, res) => {
       try {
         const name = req.params.staffmember_name;
         const data = await Workorder.find({ staffmember_name: name });

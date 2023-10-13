@@ -1,6 +1,7 @@
 var express = require("express");
 var router = express.Router();
 var Vendor = require("../modals/Vendor");
+var Workorder = require("../modals/Workorder");
 var {
   verifyToken,
   hashPassword,
@@ -51,9 +52,34 @@ router.post("/vendor", async (req, res) => {
   // delete Vendor 
 router.delete("/delete_vendor", async (req, res) => {
     try {
-      let result = await Vendor.deleteMany({
-        _id: { $in: req.body },
+      const staffIdsToDelete = req.body;
+  
+      // Get the names of the staff members to be deleted
+      const staffMembersToDelete = await Vendor.find({
+        _id: { $in: staffIdsToDelete },
+      }).select("vendor_name");
+  
+      const staffMemberNamesToDelete = staffMembersToDelete.map(
+        (staff) => staff.vendor_name
+      );
+  
+      // Check if any work order is associated with the staff members to be deleted
+      const assignedWorkOrders = await Workorder.find({
+        vendor_name: { $in: staffMemberNamesToDelete },
       });
+
+      if (assignedWorkOrders.length > 0) {
+        return res.status(201).json({
+          statusCode: 201,
+          message:
+            "Vendor is already assigned to work orders. Deletion not allowed.",
+        });
+      }
+  
+      const result = await Vendor.deleteMany({
+        _id: { $in: staffIdsToDelete },
+      });
+
       res.json({
         statusCode: 200,
         data: result,

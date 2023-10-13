@@ -124,7 +124,7 @@ router.get("/propropartytype", async (req, res) => {
 
 
 // delete proparty type working 
-  router.delete("/newproparty", async (req, res) => {
+router.delete("/newproparty", async (req, res) => {
     try {
       const propIdsToDelete = req.body;
 
